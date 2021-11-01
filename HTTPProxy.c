@@ -67,7 +67,7 @@ enum
     R_C_DEC = 1,        /* 读取客户端数据仅进行解码 */
     W_S_ENC = 2         /* 发送到服务端进行编码 */
 };
- 
+
 static int io_flag; /* 网络io的一些标志位 */
 static int m_pid; /* 保存主进程id */
 
@@ -83,7 +83,7 @@ int send_data(int socket,char * buffer,int len );
 int receive_data(int socket, char * buffer, int len);
 void hand_mproxy_info_req(int sock,char * header_buffer) ;
 void get_info(char * output);
-// const char * get_work_mode() ;
+const char * get_work_mode() ;
 int create_connection() ;
 int _main(int argc, char *argv[]) ;
 
@@ -187,10 +187,6 @@ int extract_host(const char * header)
 {
 
     char * _p = strstr(header,"CONNECT");  /* 在 CONNECT 方法中解析 隧道主机名称及端口号 */
-
-    printf("1\n");
-    puts(header);
-
     if(_p)
     {
         char * _p1 = strchr(_p,' ');
@@ -301,19 +297,19 @@ void get_info(char * output)
     memcpy(output,line_buffer,len);
     pos += len ;
 
-    sprintf(line_buffer,"%s\n","start as normal http proxy");
+    sprintf(line_buffer,"%s\n",get_work_mode());
     len = strlen(line_buffer);
     memcpy(output + pos,line_buffer,len);
     pos += len;
 
-    // if(strlen(remote_host) > 0) 
-    // {
-    //     sprintf(line_buffer,"start server on %d and next hop is %s:%d\n",local_port,remote_host,remote_port);
+    if(strlen(remote_host) > 0) 
+    {
+        sprintf(line_buffer,"start server on %d and next hop is %s:%d\n",local_port,remote_host,remote_port);
 
-    // } else 
-    // {
+    } else 
+    {
         sprintf(line_buffer,"start server on %d\n",local_port);
-    // }
+    }
     
     len = strlen(line_buffer);
     memcpy(output+ pos,line_buffer,len);
@@ -324,33 +320,33 @@ void get_info(char * output)
 }
 
 
-// const char * get_work_mode() 
-// {
+const char * get_work_mode() 
+{
 
-//     if(strlen(remote_host) == 0) 
-//     {
-//         if(io_flag == FLG_NONE) 
-//         {
-//             return "start as normal http proxy";
-//         } else if(io_flag == R_C_DEC)
-//         {
-//            return "start as remote forward proxy and do decode data when recevie data" ;
-//         }
+    if(strlen(remote_host) == 0) 
+    {
+        if(io_flag == FLG_NONE) 
+        {
+            return "start as normal http proxy";
+        } else if(io_flag == R_C_DEC)
+        {
+           return "start as remote forward proxy and do decode data when recevie data" ;
+        }
         
-//     } else 
-//     {
-//         if(io_flag == FLG_NONE) 
-//         {
-//             return "start as remote forward proxy";
-//         } else if(io_flag == W_S_ENC) 
-//         {
-//             return "start as forward proxy and do encode data when send data";
-//         }
-//     }
+    } else 
+    {
+        if(io_flag == FLG_NONE) 
+        {
+            return "start as remote forward proxy";
+        } else if(io_flag == W_S_ENC) 
+        {
+            return "start as forward proxy and do encode data when send data";
+        }
+    }
 
-//     return "unknow";
+    return "unknow";
 
-// }
+}
 
 /* 处理客户端的连接 */
 void handle_client(int client_sock, struct sockaddr_in client_addr)
@@ -488,11 +484,6 @@ void rewrite_header()
     char * p0 = strchr(p,'\0');
     char * p5 = strstr(header_buffer,"HTTP/"); /* "HTTP/" 是协议标识 如 "HTTP/1.1" */
     int len = strlen(header_buffer);
-
-    printf("2\n");
-    puts(header_buffer);
-
-
     if(p)
     {
         char * p1 = strchr(p + 7,'/');
@@ -516,8 +507,6 @@ void rewrite_header()
 
         }
     }
-    printf("3\n");
-    puts(header_buffer);
 }
 
 
@@ -691,30 +680,30 @@ int _main(int argc, char *argv[])
 			case 'l':
 				local_port = atoi(optarg);
 				break;
-			// case 'h':
-			// 	p = strchr(optarg, ':');
-			// 	if(p)
-			// 	{
-			// 		strncpy(remote_host, optarg, p - optarg);
-			// 		remote_port = atoi(p+1);
-			// 	}
-			// 	else
-			// 	{
-			// 		strncpy(remote_host, optarg, strlen(remote_host));
-			// 	}
-			// 	break;
+			case 'h':
+				p = strchr(optarg, ':');
+				if(p)
+				{
+					strncpy(remote_host, optarg, p - optarg);
+					remote_port = atoi(p+1);
+				}
+				else
+				{
+					strncpy(remote_host, optarg, strlen(remote_host));
+				}
+				break;
 			case 'd':
 				daemon = 1;
 				break;
-			// case 'E':
-			// 	io_flag = W_S_ENC;
-			// 	break;
-			// case 'D':
-			// 	io_flag = R_C_DEC;
-			// 	break;
-			// case ':':
-			// 	printf("\nMissing argument after: -%c\n", optopt);
-			// 	usage();
+			case 'E':
+				io_flag = W_S_ENC;
+				break;
+			case 'D':
+				io_flag = R_C_DEC;
+				break;
+			case ':':
+				printf("\nMissing argument after: -%c\n", optopt);
+				usage();
 			case '?':
 				printf("\nInvalid argument: %c\n", optopt);
 			default:
