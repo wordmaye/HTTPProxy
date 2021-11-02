@@ -387,7 +387,7 @@ void handle_client(int client_sock, struct sockaddr_in client_addr)
                 LOG("Cannot extract host field,bad http protrotol");
                 return;
             }
-            LOG("Host:%s port: %d io_flag:%d\n",remote_host,remote_port,io_flag);
+            LOG("Host:%s port: %d\n",remote_host,remote_port);
 
         }
     }
@@ -613,10 +613,7 @@ void usage(void)
 {
     printf("Usage:\n");
     printf(" -l <port number>  specifyed local listen port \n");
-    printf(" -h <remote server and port> specifyed next hop server name\n");
     printf(" -d <remote server and port> run as daemon\n");
-    printf("-E encode data when forwarding data\n");
-    printf ("-D decode data when receiving data\n");
     exit (8);
 }
 
@@ -671,7 +668,7 @@ int _main(int argc, char *argv[])
     char info_buf[2048];
 	
 	int opt;
-	char optstrs[] = ":l:h:dED";
+	char optstrs[] = ":l:d";
 	char *p = NULL;
 	while(-1 != (opt = getopt(argc, argv, optstrs)))
 	{
@@ -680,30 +677,9 @@ int _main(int argc, char *argv[])
 			case 'l':
 				local_port = atoi(optarg);
 				break;
-			case 'h':
-				p = strchr(optarg, ':');
-				if(p)
-				{
-					strncpy(remote_host, optarg, p - optarg);
-					remote_port = atoi(p+1);
-				}
-				else
-				{
-					strncpy(remote_host, optarg, strlen(remote_host));
-				}
-				break;
 			case 'd':
 				daemon = 1;
 				break;
-			case 'E':
-				io_flag = W_S_ENC;
-				break;
-			case 'D':
-				io_flag = R_C_DEC;
-				break;
-			case ':':
-				printf("\nMissing argument after: -%c\n", optopt);
-				usage();
 			case '?':
 				printf("\nInvalid argument: %c\n", optopt);
 			default:
